@@ -40,6 +40,8 @@ void FixedSizeAllocator::destroy() {
 
         if (next == nullptr)
             break;
+
+        page = next;
     }
 
     headPage_ = nullptr;
@@ -104,7 +106,7 @@ void FixedSizeAllocator::free(void *p) {
 
     Page* page = headPage_;
     while (true) {
-        int blockNum = (int)((BYTE*)p - (BYTE*)page + sizeof(Page)) / kBlockSize;
+        int blockNum = (int)((BYTE*)p - (BYTE*)page - sizeof(Page)) / kBlockSize;
 
         if (blockNum >= 0 && blockNum <= kPageSize) {
 #ifdef DEBUG
@@ -129,6 +131,7 @@ void FixedSizeAllocator::free(void *p) {
     }
 }
 
+#ifdef DEBUG
 void FixedSizeAllocator::dumpStat() const {
     assert(headPage_ != nullptr);
 
@@ -179,6 +182,7 @@ void FixedSizeAllocator::dumpBlocks() const {
     }
     printf("----------------------------------------\n");
 }
+#endif // DEBUG
 
 FixedSizeAllocator::Page *FixedSizeAllocator::createPage() const {
     Page* page = (Page*)VirtualAlloc(nullptr, kBlockSize * kPageSize + sizeof(Page), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
