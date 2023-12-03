@@ -10,3 +10,5 @@ add_executable(composite_memory_allocator scr/main.cpp
 if (CMAKE_BUILD_TYPE MATCHES Debug)
     add_definitions(-DDEBUG)
 endif()
+
+add_subdirectory(google-tests)
