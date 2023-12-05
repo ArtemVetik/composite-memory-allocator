@@ -135,7 +135,7 @@ void FixedSizeAllocator::free(void *p) {
 void FixedSizeAllocator::dumpStat() const {
     assert(headPage_ != nullptr);
 
-    printf("---------------dumpStat---------------\n");
+    printf("---------------getStat---------------\n");
     printf("FSA: %d\n", kBlockSize);
 
     Page* page = headPage_;
@@ -159,7 +159,7 @@ void FixedSizeAllocator::dumpStat() const {
 void FixedSizeAllocator::dumpBlocks() const {
     assert(headPage_ != nullptr);
 
-    printf("---------------dumpBlocks---------------\n");
+    printf("---------------getNextBlock---------------\n");
     Page* page = headPage_;
     unsigned int i = 1;
     while (page != nullptr) {
