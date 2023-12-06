@@ -120,4 +120,15 @@ namespace CoalesceAllocator {
         FreeRangeRandom(allocator, plist, 300);
         allocator.destroy();
     }
+
+    TEST(CoalesceAllocator, AllocSplit)
+    {
+        CoalesceAllocator allocator = CoalesceAllocator();
+        allocator.init();
+
+        void* p = allocator.alloc(PAGE_SIZE - 61);
+        allocator.free(p);
+
+        allocator.destroy();
+    }
 }
