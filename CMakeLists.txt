@@ -8,6 +8,8 @@ add_executable(composite_memory_allocator scr/main.cpp
         scr/FixedSizeAllocator.cpp
         include/CoalesceAllocator.h
         scr/CoalesceAllocator.cpp
+        include/CompositeMemoryAllocator.h
+        scr/CompositeMemoryAllocator.cpp
 )
 
 if (CMAKE_BUILD_TYPE MATCHES Debug)
