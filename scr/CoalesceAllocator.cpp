@@ -236,6 +236,22 @@ namespace CoalesceAllocator {
                 (BYTE*) p <= (BYTE*)page + sizeof(Page) + PAGE_SIZE + sizeof(BlockStart));
     }
 
+    void CoalesceAllocator::validateBlock(BlockStart* block, bool free) {
+        ASSERT(block->markerStart == FEEDFACE);
+        ASSERT(block->markerEnd == FEEDFACE);
+        auto* blockEnd = (BlockEnd*)((BYTE*)block + block->size - sizeof(BlockEnd));
+        ASSERT(blockEnd->markerEnd == FEEDFACE);
+        ASSERT(blockEnd->markerEnd == FEEDFACE);
+
+        if (free) {
+            ASSERT(block->alloc == 0);
+            ASSERT(*((uint32*)((BYTE*)block + sizeof(BlockStart))) == DEADBEEF);
+        }
+        else {
+            ASSERT(block->alloc);
+        }
+    }
+
 #ifdef DEBUG
     StatReport CoalesceAllocator::getStat() const {
         uint32 pagesCount = 0;
@@ -283,22 +299,5 @@ namespace CoalesceAllocator {
             next->alloc != 0,
         };
     }
-
-    void CoalesceAllocator::validateBlock(BlockStart* block, bool free) {
-        ASSERT(block->markerStart == FEEDFACE);
-        ASSERT(block->markerEnd == FEEDFACE);
-        auto* blockEnd = (BlockEnd*)((BYTE*)block + block->size - sizeof(BlockEnd));
-        ASSERT(blockEnd->markerEnd == FEEDFACE);
-        ASSERT(blockEnd->markerEnd == FEEDFACE);
-
-        if (free) {
-            ASSERT(block->alloc == 0);
-            ASSERT(*((uint32*)((BYTE*)block + sizeof(BlockStart))) == DEADBEEF);
-        }
-        else {
-            ASSERT(block->alloc);
-        }
-    }
-
 #endif // DEBUG
 }

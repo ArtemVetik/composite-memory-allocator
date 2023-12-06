@@ -10,7 +10,7 @@ namespace CoalesceAllocator {
         }
     }
 
-    void FreeRange(CoalesceAllocator &allocator, std::vector<void*> &plist, int count) {
+    void FreeRangeRandom(CoalesceAllocator &allocator, std::vector<void*> &plist, int count) {
         for (int i = 0; i < count; i++) {
             int index = rand() % plist.size();
             allocator.free(plist[index]);
@@ -101,7 +101,7 @@ namespace CoalesceAllocator {
         std::vector<void*> plist;
 
         AllocateRange(allocator, plist, 1024, 4096, 10*4096);
-        FreeRange(allocator, plist, 1024);
+        FreeRangeRandom(allocator, plist, 1024);
 
         allocator.destroy();
     }
@@ -113,11 +113,11 @@ namespace CoalesceAllocator {
         std::vector<void*> plist;
 
         AllocateRange(allocator, plist, 512, 4096, 10*4096);
-        FreeRange(allocator, plist, 256);
+        FreeRangeRandom(allocator, plist, 256);
         AllocateRange(allocator, plist, 200, 4096, 10*4096);
-        FreeRange(allocator, plist, 256);
+        FreeRangeRandom(allocator, plist, 256);
         AllocateRange(allocator, plist, 100, 4096, 10*4096);
-        FreeRange(allocator, plist, 300);
+        FreeRangeRandom(allocator, plist, 300);
         allocator.destroy();
     }
 }
