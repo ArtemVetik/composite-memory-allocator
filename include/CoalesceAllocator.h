@@ -9,6 +9,7 @@ namespace CoalesceAllocator {
     static constexpr uint32 DEADBEEF = 0xdeadbeef;
     static constexpr uint32 FEEDFACE = 0xfeedface;
 
+#if DEBUG
     struct StatReport {
         uint32 allocCallCount;
         uint32 freeCallCount;
@@ -21,6 +22,7 @@ namespace CoalesceAllocator {
         uint32 size = {};
         bool allocated = {};
     };
+#endif
 
     class CoalesceAllocator {
     public:
@@ -69,9 +71,7 @@ namespace CoalesceAllocator {
         static Page* createPage();
         static bool insidePage(Page* page, void* p) ;
         static void setupBlock(BlockStart *block, uint32 size, BlockStart* next, BlockStart* prev, bool free);
-#ifdef DEBUG
         static void validateBlock(BlockStart* block, bool free);
-#endif
 
         Page* m_headPage;
 #if DEBUG
