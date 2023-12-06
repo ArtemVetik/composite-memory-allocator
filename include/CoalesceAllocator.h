@@ -32,7 +32,7 @@ namespace CoalesceAllocator {
         void destroy();
         void* alloc(uint32 size);
         void free(void* p);
-
+        bool containsAddress(void* p) const;
 #if DEBUG
         [[nodiscard]] StatReport getStat() const;
         [[nodiscard]] BlockReport getNextBlock(uint32 pageNum, void* from) const;

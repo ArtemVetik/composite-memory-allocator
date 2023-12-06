@@ -34,16 +34,12 @@ namespace CoalesceAllocator {
     void CoalesceAllocator::destroy() {
         ASSERT(m_headPage != nullptr);
 
-        int i = 0;
         while (m_headPage) {
             Page* next = m_headPage->next;
 
 #ifdef DEBUG
-            BlockReport report = {};
-            while ((report = getNextBlock(i, report.address)).address) {
-                ASSERT(report.allocated == false);
-            }
-            i++;
+            ASSERT(m_headPage->fh->size == sizeof(BlockStart) + PAGE_SIZE + sizeof(BlockEnd));
+            ASSERT(m_headPage->fh->next == nullptr);
 #endif
 
             if (!VirtualFree(m_headPage, 0, MEM_RELEASE)) {
@@ -143,13 +139,13 @@ namespace CoalesceAllocator {
         auto* lb = (BlockStart*)((BYTE*)cb - lbs);
         auto* rb = (BlockStart*)((BYTE*)cb + cb->size);
 
-        if ((BYTE*)lb < (BYTE*)page + sizeof(Page) || (BYTE*)lb > (BYTE*)page + sizeof(Page) + PAGE_SIZE - sizeof(BlockEnd) - sizeof(BlockStart) || lb->alloc)
+        if (!insidePage(page, (BYTE*)lb + sizeof(BlockStart)) || lb->alloc)
             lb = nullptr;
-        if ((BYTE*)rb < (BYTE*)page + sizeof(Page) || (BYTE*)rb > (BYTE*)page + sizeof(Page) + PAGE_SIZE - sizeof(BlockEnd) - sizeof(BlockStart) || rb->alloc)
+        if (!insidePage(page, (BYTE*)rb + sizeof(BlockStart)) || rb->alloc)
             rb = nullptr;
 
         if (lb) validateBlock(lb, true);
-        //if (rb) validateBlock(rb, true);
+        if (rb) validateBlock(rb, true);
 
         if (lb != nullptr) {
             lb->size += cb->size;
@@ -167,7 +163,7 @@ namespace CoalesceAllocator {
         // if no joins or only right join, update fh
         if ((lb == nullptr && rb == nullptr) || (lb == nullptr)) {
             if (page->fh)
-                page->fh->prev = (BlockStart*)p;
+                page->fh->prev = cb;
 
             cb->next = page->fh;
             cb->prev = nullptr;
@@ -229,6 +225,18 @@ namespace CoalesceAllocator {
             *((uint32*)((BYTE*)block + sizeof(BlockStart))) = DEADBEEF;
         }
 #endif
+    }
+
+    bool CoalesceAllocator::containsAddress(void *p) const {
+        Page* page = m_headPage;
+        while(page) {
+            if (insidePage(page, p))
+                return true;
+
+            page = page->next;
+        }
+
+        return false;
     }
 
     bool CoalesceAllocator::insidePage(Page* page, void *p) {
@@ -299,5 +307,6 @@ namespace CoalesceAllocator {
             next->alloc != 0,
         };
     }
+
 #endif // DEBUG
 }
