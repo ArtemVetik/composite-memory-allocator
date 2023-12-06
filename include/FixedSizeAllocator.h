@@ -7,15 +7,6 @@ namespace FixedSizeAllocator {
 
     static constexpr uint32 PAGE_SIZE = 4096;
 
-    enum FSABlockSize {
-        FSA16 = 16,
-        FSA32 = 32,
-        FSA64 = 64,
-        FSA128 = 128,
-        FSA256 = 256,
-        FSA512 = 512,
-    };
-
 #ifdef DEBUG
     struct StatReport {
         uint32 allocCallCount;
@@ -32,26 +23,25 @@ namespace FixedSizeAllocator {
 
     class FixedSizeAllocator {
     public:
-        explicit FixedSizeAllocator(FSABlockSize size);
+        FixedSizeAllocator();
         ~FixedSizeAllocator();
-        void init();
+        void init(uint32 blockSize);
         void destroy();
         void* alloc(uint32 size);
         void free(void *p);
-
+        [[nodiscard]] uint32 getBlockSize() const;
+        bool containsAddress(void* p) const;
 #ifdef DEBUG
         [[nodiscard]] StatReport getStatReport() const;
         [[nodiscard]] AllocBlocksReport getAllocBlocksReport(uint32 pageNum) const;
 #endif
 
-        const FSABlockSize BLOCK_SIZE;
     private:
         struct Page {
             Page *next;
             int numInit;
             int fh;
         };
-
         struct Block {
             int freeIndex;
         };
@@ -59,6 +49,7 @@ namespace FixedSizeAllocator {
         [[nodiscard]] Page *createPage() const;
 
         Page *m_headPage;
+        uint32 m_blockSize;
 #ifdef DEBUG
         uint32 m_allocCallCount;
         uint32 m_freeCallCount;

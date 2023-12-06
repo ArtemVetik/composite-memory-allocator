@@ -10,9 +10,9 @@
 #endif
 
 namespace FixedSizeAllocator {
-    FixedSizeAllocator::FixedSizeAllocator(FSABlockSize size) : BLOCK_SIZE(size) {
+    FixedSizeAllocator::FixedSizeAllocator() {
+        m_blockSize = -1;
         m_headPage = nullptr;
-
 #if DEBUG
         m_allocCallCount = 0;
         m_freeCallCount = 0;
@@ -24,10 +24,12 @@ namespace FixedSizeAllocator {
             destroy();
     }
 
-    void FixedSizeAllocator::init() {
-        if (m_headPage != nullptr)
+    void FixedSizeAllocator::init(uint32 blockSize) {
+        if (m_headPage != nullptr) {
             return;
+        }
 
+        m_blockSize = blockSize;
         m_headPage = createPage();
     }
 
@@ -55,7 +57,7 @@ namespace FixedSizeAllocator {
     void* FixedSizeAllocator::alloc(uint32 size) {
         ASSERT(m_headPage != nullptr);
 
-        if (size > BLOCK_SIZE)
+        if (size > m_blockSize)
             return nullptr;
 
 #if DEBUG
@@ -66,13 +68,13 @@ namespace FixedSizeAllocator {
         while (true) {
             if (page->numInit < PAGE_SIZE) {
                 page->numInit++;
-                return (BYTE*)page + sizeof(Page) + (page->numInit - 1) * BLOCK_SIZE;
+                return (BYTE*)page + sizeof(Page) + (page->numInit - 1) * m_blockSize;
             }
 
             if (page->fh >= 0) {
                 int fh = page->fh;
-                page->fh = ((Block*)((BYTE*)page + page->fh * BLOCK_SIZE))->freeIndex;
-                return (BYTE*)page + sizeof(Page) + fh * BLOCK_SIZE;
+                page->fh = ((Block*)((BYTE*)page + page->fh * m_blockSize))->freeIndex;
+                return (BYTE*)page + sizeof(Page) + fh * m_blockSize;
             }
 
             if (page->next == nullptr)
@@ -100,17 +102,17 @@ namespace FixedSizeAllocator {
 
         Page* page = m_headPage;
         while (true) {
-            int blockNum = (int)((BYTE*)p - (BYTE*)page - sizeof(Page)) / BLOCK_SIZE;
+            int blockNum = (int)((BYTE*)p - (BYTE*)page - sizeof(Page)) / (int)m_blockSize;
 
             if (blockNum >= 0 && blockNum <= PAGE_SIZE) {
 #ifdef DEBUG
                 int fh = page->fh;
                 while (fh >= 0) {
                     ASSERT(blockNum != fh);
-                    fh = ((Block*)((BYTE*)page + sizeof(Page) + fh * BLOCK_SIZE))->freeIndex;
+                    fh = ((Block*)((BYTE*)page + sizeof(Page) + fh * m_blockSize))->freeIndex;
                 }
 #endif
-                ((Block*)((BYTE*)page + sizeof(Page) + blockNum * BLOCK_SIZE))->freeIndex = page->fh;
+                ((Block*)((BYTE*)page + sizeof(Page) + blockNum * m_blockSize))->freeIndex = page->fh;
                 page->fh = blockNum;
                 return;
             }
@@ -122,8 +124,24 @@ namespace FixedSizeAllocator {
         }
     }
 
+    uint32 FixedSizeAllocator::getBlockSize() const {
+        return m_blockSize;
+    }
+
+    bool FixedSizeAllocator::containsAddress(void *p) const {
+        Page* page = m_headPage;
+        while(page) {
+            if (p >= (BYTE*)page + sizeof(Page) && p <= (BYTE*)page + sizeof(Page) + m_blockSize * (PAGE_SIZE - 1))
+                return true;
+
+            page = page->next;
+        }
+
+        return false;
+    }
+
     FixedSizeAllocator::Page *FixedSizeAllocator::createPage() const {
-        Page* page = (Page*)VirtualAlloc(nullptr, sizeof(Page) + BLOCK_SIZE * PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+        Page* page = (Page*)VirtualAlloc(nullptr, sizeof(Page) + m_blockSize * PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
         if (page == nullptr) {
             printf("VirtualAlloc failed.\n");
@@ -149,7 +167,7 @@ namespace FixedSizeAllocator {
             int fh = page->fh;
             while (fh >= 0) {
                 freeCount++;
-                fh = ((Block*)((BYTE*)page + sizeof(Page) + fh * BLOCK_SIZE))->freeIndex;
+                fh = ((Block*)((BYTE*)page + sizeof(Page) + fh * m_blockSize))->freeIndex;
             }
             freeCount += PAGE_SIZE - page->numInit;
 
@@ -179,17 +197,18 @@ namespace FixedSizeAllocator {
         int fh = page->fh;
         while (fh >= 0) {
             blocks[fh] = true;
-            fh = ((Block*)((BYTE*)page + sizeof(Page) + fh * BLOCK_SIZE))->freeIndex;
+            fh = ((Block*)((BYTE*)page + sizeof(Page) + fh * m_blockSize))->freeIndex;
         }
 
         AllocBlocksReport report{};
         for (int i = 0; i < page->numInit; ++i) {
             if (!blocks[i]) {
-                report.blocks[report.count++] = (BYTE*)page + sizeof(Page) + i * BLOCK_SIZE;
+                report.blocks[report.count++] = (BYTE*)page + sizeof(Page) + i * m_blockSize;
             }
         }
 
         return report;
     }
+
 #endif // DEBUG
 }

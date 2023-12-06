@@ -20,8 +20,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FSA16)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA16);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(16);
         int* p = (int*)fsa.alloc(4 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -30,8 +30,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FSA32)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA32);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(32);
         int* p = (int*)fsa.alloc(8 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -40,8 +40,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FSA64)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA64);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(64);
         int* p = (int*)fsa.alloc(16 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -50,8 +50,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FSA128)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA128);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(128);
         int* p = (int*)fsa.alloc(32 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -60,8 +60,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FSA256)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA256);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(256);
         int* p = (int*)fsa.alloc(64 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -70,8 +70,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FSA512)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA512);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(512);
         int* p = (int*)fsa.alloc(128 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -80,8 +80,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, DoubleFree)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA512);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(512);
         int* p = (int*)fsa.alloc(128 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         fsa.free(p);
@@ -91,8 +91,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, MemoryLeak)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA512);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(512);
         int* p = (int*)fsa.alloc(128 * sizeof(int));
         EXPECT_TRUE(p != nullptr);
         EXPECT_DEATH(fsa.destroy(), "");
@@ -102,8 +102,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, FewPages)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA16);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(16);
         int* p[4099];
         for (int i = 0; i < 4099; i++) {
             p[i] = (int*)fsa.alloc(2 * sizeof(int));
@@ -117,8 +117,8 @@ namespace FixedSizeAllocator {
 
     TEST(FSA, AllocAndFreeRandom)
     {
-        FixedSizeAllocator fsa(FSABlockSize::FSA256);
-        fsa.init();
+        FixedSizeAllocator fsa;
+        fsa.init(256);
 
         std::vector<void*> plist;
         AllocateRange(fsa, plist, 300, 200);
