@@ -29,9 +29,11 @@ int main() {
         FreeRangeRandom(allocator, plist, rand() % plist.size());
     }
 
+#ifdef DEBUG
     allocator.dumpStat();
     printf("\n\n");
     allocator.dumpBlocks();
+#endif
 
     for(auto &p : plist)
         allocator.free(p);
