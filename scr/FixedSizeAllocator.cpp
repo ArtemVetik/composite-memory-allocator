@@ -1,8 +1,8 @@
 #include "../include/FixedSizeAllocator.h"
 
 #include <windows.h>
-#include <iostream>
 #ifdef DEBUG
+#include <iostream>
 #include <cassert>
 #define ASSERT(x) assert(x)
 #else
@@ -46,7 +46,9 @@ namespace FixedSizeAllocator {
 #endif
 
             if (!VirtualFree(m_headPage, 0, MEM_RELEASE)) {
+#ifdef DEBUG
                 printf("VirtualFree failed.\n");
+#endif
                 return;
             }
 
@@ -73,7 +75,7 @@ namespace FixedSizeAllocator {
 
             if (page->fh >= 0) {
                 int fh = page->fh;
-                page->fh = ((Block*)((BYTE*)page + page->fh * m_blockSize))->freeIndex;
+                page->fh = ((Block*)((BYTE*)page + sizeof(Page) + page->fh * m_blockSize))->freeIndex;
                 return (BYTE*)page + sizeof(Page) + fh * m_blockSize;
             }
 
@@ -131,7 +133,7 @@ namespace FixedSizeAllocator {
     bool FixedSizeAllocator::containsAddress(void *p) const {
         Page* page = m_headPage;
         while(page) {
-            if (p >= (BYTE*)page + sizeof(Page) && p <= (BYTE*)page + sizeof(Page) + m_blockSize * (PAGE_SIZE - 1))
+            if (p >= (BYTE*)page + sizeof(Page) && p < (BYTE*)page + sizeof(Page) + m_blockSize * PAGE_SIZE)
                 return true;
 
             page = page->next;
@@ -144,7 +146,9 @@ namespace FixedSizeAllocator {
         Page* page = (Page*)VirtualAlloc(nullptr, sizeof(Page) + m_blockSize * PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
         if (page == nullptr) {
+#ifdef DEBUG
             printf("VirtualAlloc failed.\n");
+#endif
             return nullptr;
         }
 

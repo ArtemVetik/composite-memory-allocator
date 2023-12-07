@@ -19,15 +19,18 @@ namespace CompositeMemoryAllocator {
         FSA512 = 9,
     };
 
-    class CompositeMemoryAllocatorTests {
+    class CompositeMemoryAllocator {
     public:
-        CompositeMemoryAllocatorTests() = default;
-        ~CompositeMemoryAllocatorTests() = default;
+        CompositeMemoryAllocator() = default;
+        ~CompositeMemoryAllocator() = default;
         void init();
         void destroy();
         void* alloc(uint32 size);
         void free(void *p);
-
+#ifdef DEBUG
+        void dumpStat() const;
+        void dumpBlocks() const;
+#endif
     private:
         struct VirtualAllocPage {
             VirtualAllocPage* next;
