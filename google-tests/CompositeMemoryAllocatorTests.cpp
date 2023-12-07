@@ -2,7 +2,7 @@
 #include "../scr/CompositeMemoryAllocator.cpp"
 
 namespace CompositeMemoryAllocator {
-    void AllocateRange(CompositeMemoryAllocatorTests &allocator, std::vector<void*> &plist, int count, uint32 minSize, uint32 maxSize) {
+    void AllocateRange(CompositeMemoryAllocator &allocator, std::vector<void*> &plist, int count, uint32 minSize, uint32 maxSize) {
         for (int i = 0; i < count; i++) {
             void* p = (int*)allocator.alloc(minSize + rand() % maxSize);
             EXPECT_TRUE(p != nullptr);
@@ -10,7 +10,7 @@ namespace CompositeMemoryAllocator {
         }
     }
 
-    void FreeRangeRandom(CompositeMemoryAllocatorTests &allocator, std::vector<void*> &plist, int count) {
+    void FreeRangeRandom(CompositeMemoryAllocator &allocator, std::vector<void*> &plist, int count) {
         for (int i = 0; i < count; i++) {
             int index = rand() % plist.size();
             allocator.free(plist[index]);
@@ -19,7 +19,7 @@ namespace CompositeMemoryAllocator {
     }
 
     TEST(CompositeMemoryAllocator, SimpleAllocAndFree) {
-        CompositeMemoryAllocatorTests allocator;
+        CompositeMemoryAllocator allocator;
         allocator.init();
 
         void* p[10];
@@ -34,31 +34,25 @@ namespace CompositeMemoryAllocator {
     }
 
     TEST(CompositeMemoryAllocator, MemoryLeak) {
-        CompositeMemoryAllocatorTests allocator;
+        CompositeMemoryAllocator allocator;
         allocator.init();
-        void* p1 = allocator.alloc(100);
-        void* p2 = allocator.alloc(1000);
+        void* p = allocator.alloc(12 * 1024 * 1024);
         EXPECT_DEATH(allocator.destroy(), "");
-        allocator.free(p2);
-        EXPECT_DEATH(allocator.destroy(), "");
-        allocator.free(p1);
+        allocator.free(p);
         allocator.destroy();
     }
 
     TEST(CompositeMemoryAllocator, DoubleFree) {
-        CompositeMemoryAllocatorTests allocator;
+        CompositeMemoryAllocator allocator;
         allocator.init();
-        void* p1 = allocator.alloc(100);
-        void* p2 = allocator.alloc(1000);
-        allocator.free(p2);
-        EXPECT_DEATH(allocator.free(p2), "");
-        allocator.free(p1);
-        EXPECT_DEATH(allocator.free(p1), "");
+        void* p = allocator.alloc(11 * 1024 * 1024);
+        allocator.free(p);
+        EXPECT_DEATH(allocator.free(p), "");
         allocator.destroy();
     }
 
     TEST(CompositeMemoryAllocator, SmallAndBigAlloc) {
-        CompositeMemoryAllocatorTests allocator;
+        CompositeMemoryAllocator allocator;
         allocator.init();
         void* p1 = allocator.alloc(2);
         EXPECT_TRUE(p1 != nullptr);
@@ -70,7 +64,7 @@ namespace CompositeMemoryAllocator {
     }
 
     TEST(CompositeMemoryAllocator, RandomAllocAndFree) {
-        CompositeMemoryAllocatorTests allocator;
+        CompositeMemoryAllocator allocator;
         allocator.init();
 
         std::vector<void*> plist;

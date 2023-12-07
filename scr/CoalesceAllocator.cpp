@@ -1,8 +1,8 @@
 #include "../include/CoalesceAllocator.h"
 
 #include <windows.h>
-#include <iostream>
 #ifdef DEBUG
+#include <iostream>
 #include <cassert>
 #define ASSERT(x) assert(x)
 #else
@@ -43,7 +43,9 @@ namespace CoalesceAllocator {
 #endif
 
             if (!VirtualFree(m_headPage, 0, MEM_RELEASE)) {
+#ifdef DEBUG
                 printf("VirtualFree failed.\n");
+#endif
                 return;
             }
 
@@ -181,7 +183,9 @@ namespace CoalesceAllocator {
                                          MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
         if (page == nullptr) {
+#ifdef DEBUG
             printf("VirtualAlloc failed.\n");
+#endif
             return nullptr;
         }
 
@@ -302,7 +306,7 @@ namespace CoalesceAllocator {
             return BlockReport{};
 
         return BlockReport {
-            next,
+                (BYTE*)next + sizeof(BlockStart),
             next->size - (uint32)sizeof(BlockStart) - (uint32)sizeof(BlockEnd),
             next->alloc != 0,
         };
