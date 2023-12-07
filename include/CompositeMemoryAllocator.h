@@ -1,6 +1,7 @@
 #ifndef COMPOSITE_MEMORY_ALLOCATOR_COMPOSITEMEMORYALLOCATOR_H
 #define COMPOSITE_MEMORY_ALLOCATOR_COMPOSITEMEMORYALLOCATOR_H
 
+
 #include "FixedSizeAllocator.h"
 #include "CoalesceAllocator.h"
 
@@ -28,8 +29,14 @@ namespace CompositeMemoryAllocator {
         void free(void *p);
 
     private:
+        struct VirtualAllocPage {
+            VirtualAllocPage* next;
+            VirtualAllocPage* prev;
+        };
+
         FixedSizeAllocator::FixedSizeAllocator m_fixedSizeAllocators[BLOCK_TYPE_COUNT];
         CoalesceAllocator::CoalesceAllocator m_coalesceAllocator;
+        VirtualAllocPage* m_virtualAllocHead{};
     };
 }
 

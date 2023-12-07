@@ -21,8 +21,8 @@ namespace CompositeMemoryAllocator {
 
     void* CompositeMemoryAllocatorTests::CompositeMemoryAllocatorTests::alloc(uint32 size) {
         if (size > 0 && size <= 1 << FSABlockSize::FSA512) {
-            //int index = __builtin_clz((size - 1) >> 3) ^ 31;
-            //m_fixedSizeAllocators[index].alloc(size);
+//            int index = __builtin_clz((size - 1) >> 3) ^ 31;
+//            return m_fixedSizeAllocators[index].alloc(size);
 
             for (auto &fsa : m_fixedSizeAllocators)
                 if (fsa.getBlockSize() >= size)
@@ -32,7 +32,12 @@ namespace CompositeMemoryAllocator {
             return m_coalesceAllocator.alloc(size);
         }
         else {
-            return VirtualAlloc(nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+            auto* page = (VirtualAllocPage*)VirtualAlloc(nullptr, size + sizeof(VirtualAllocPage), MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+            page->next = m_virtualAllocHead;
+            if (page->next) page->next->prev = page;
+            page->prev = nullptr;
+            m_virtualAllocHead = page;
+            return page;
         }
     }
 
@@ -44,9 +49,21 @@ namespace CompositeMemoryAllocator {
             }
         }
 
-        if (m_coalesceAllocator.containsAddress(p))
+        if (m_coalesceAllocator.containsAddress(p)) {
             m_coalesceAllocator.free(p);
+            return;
+        }
 
-        //TODO: else VirtualFree(...)
+        VirtualAllocPage* page = m_virtualAllocHead;
+        while (page) {
+            if ((BYTE*)page + sizeof(VirtualAllocPage) == (BYTE*)p) {
+                VirtualFree(page, 0, MEM_RELEASE);
+                if (page->next) page->next->prev = page->prev;
+                if (page->prev) page->prev->next = page->next;
+                else m_virtualAllocHead = page->next;
+                return;
+            }
+            page = page->next;
+        }
     }
 }
