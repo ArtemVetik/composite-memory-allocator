@@ -13,7 +13,7 @@ namespace FixedSizeAllocator {
     FixedSizeAllocator::FixedSizeAllocator() {
         m_blockSize = -1;
         m_headPage = nullptr;
-#if DEBUG
+#ifdef DEBUG
         m_allocCallCount = 0;
         m_freeCallCount = 0;
 #endif
@@ -62,7 +62,7 @@ namespace FixedSizeAllocator {
         if (size > m_blockSize)
             return nullptr;
 
-#if DEBUG
+#ifdef DEBUG
         m_allocCallCount++;
 #endif
 
@@ -98,7 +98,7 @@ namespace FixedSizeAllocator {
 
     void FixedSizeAllocator::free(void *p) {
         ASSERT(m_headPage != nullptr);
-#if DEBUG
+#ifdef DEBUG
         m_freeCallCount++;
 #endif
 

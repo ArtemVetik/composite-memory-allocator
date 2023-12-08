@@ -9,7 +9,7 @@ namespace CoalesceAllocator {
     static constexpr uint32 DEADBEEF = 0xdeadbeef;
     static constexpr uint32 FEEDFACE = 0xfeedface;
 
-#if DEBUG
+#ifdef DEBUG
     struct StatReport {
         uint32 allocCallCount;
         uint32 freeCallCount;
@@ -33,14 +33,14 @@ namespace CoalesceAllocator {
         void* alloc(uint32 size);
         void free(void* p);
         bool containsAddress(void* p) const;
-#if DEBUG
+#ifdef DEBUG
         [[nodiscard]] StatReport getStat() const;
         [[nodiscard]] BlockReport getNextBlock(uint32 pageNum, void* from) const;
 #endif
     private:
         // BlockStart->size = sizeof(BlockStart) + size + sizeof(BlockEnd)
         struct BlockStart {
-#if DEBUG
+#ifdef DEBUG
             uint32 markerStart;
 #endif
             BlockStart* next;
@@ -53,7 +53,7 @@ namespace CoalesceAllocator {
         };
 
         struct BlockEnd {
-#if DEBUG
+#ifdef DEBUG
             uint32 markerStart;
 #endif
             uint32 size;
@@ -74,7 +74,7 @@ namespace CoalesceAllocator {
         static void validateBlock(BlockStart* block, bool free);
 
         Page* m_headPage;
-#if DEBUG
+#ifdef DEBUG
         uint32 m_allocCallCount;
         uint32 m_freeCallCount;
         uint32 m_totalAllocSize;
