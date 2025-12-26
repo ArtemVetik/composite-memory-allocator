@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../include/CompositeMemoryAllocator.h"
+#include <CompositeMemoryAllocator.h>
 
 void AllocateRange(CompositeMemoryAllocator::CompositeMemoryAllocator &allocator, std::vector<int*> &plist, int count, unsigned int minSize, unsigned int  maxSize) {
     for (int i = 0; i < count; i++) {
@@ -29,7 +29,7 @@ int main() {
         FreeRangeRandom(allocator, plist, rand() % plist.size());
     }
 
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
     allocator.dumpStat();
     printf("\n\n");
     allocator.dumpBlocks();

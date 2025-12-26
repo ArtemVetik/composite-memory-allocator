@@ -1,5 +1,6 @@
-#include "lib/googletest/include/gtest/gtest.h."
-#include "../scr/FixedSizeAllocator.cpp"
+#include "lib/googletest/include/gtest/gtest.h"
+
+#include <FixedSizeAllocator.h>
 
 namespace FixedSizeAllocator {
     void AllocateRange(FixedSizeAllocator &allocator, std::vector<void*> &plist, int count, uint32 size) {

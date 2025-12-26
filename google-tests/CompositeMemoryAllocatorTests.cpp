@@ -1,5 +1,6 @@
 #include "lib/googletest/include/gtest/gtest.h"
-#include "../scr/CompositeMemoryAllocator.cpp"
+
+#include <CompositeMemoryAllocator.h>
 
 namespace CompositeMemoryAllocator {
     void AllocateRange(CompositeMemoryAllocator &allocator, std::vector<void*> &plist, int count, uint32 minSize, uint32 maxSize) {

@@ -1,23 +1,23 @@
 #ifndef COMPOSITE_MEMORY_ALLOCATOR_FIXEDSIZEALLOCATOR_H
 #define COMPOSITE_MEMORY_ALLOCATOR_FIXEDSIZEALLOCATOR_H
 
+#include "Types.h"
 
 namespace FixedSizeAllocator {
-    typedef unsigned int uint32;
 
-    static constexpr uint32 PAGE_SIZE = 4096;
+    static constexpr uint32 PAGE_SIZE = 4096u;
 
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
     struct StatReport {
-        uint32 allocCallCount;
-        uint32 freeCallCount;
-        uint32 freeBlockCount;
-        uint32 pagesCount;
+        uint64 allocCallCount = 0;
+        uint64 freeCallCount = 0;
+        uint32 freeBlockCount = 0;
+        uint32 pagesCount = 0;
     };
 
     struct AllocBlocksReport {
         void *blocks[PAGE_SIZE];
-        uint32 count;
+        uint32 count = 0;
     };
 #endif
 
@@ -25,13 +25,19 @@ namespace FixedSizeAllocator {
     public:
         FixedSizeAllocator();
         ~FixedSizeAllocator();
+
+        FixedSizeAllocator(const FixedSizeAllocator&) = delete;
+        FixedSizeAllocator& operator = (const FixedSizeAllocator&) = delete;
+        FixedSizeAllocator(FixedSizeAllocator&&) = delete;
+        FixedSizeAllocator& operator = (FixedSizeAllocator&&) = delete;
+
         void init(uint32 blockSize);
         void destroy();
         void* alloc(uint32 size);
         void free(void *p);
         [[nodiscard]] uint32 getBlockSize() const;
         bool containsAddress(void* p) const;
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
         [[nodiscard]] StatReport getStatReport() const;
         [[nodiscard]] AllocBlocksReport getAllocBlocksReport(uint32 pageNum) const;
 #endif
@@ -50,9 +56,8 @@ namespace FixedSizeAllocator {
 
         Page *m_headPage;
         uint32 m_blockSize;
-#ifdef DEBUG
-        uint32 m_allocCallCount;
-        uint32 m_freeCallCount;
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
+        StatReport m_StatReport;
 #endif
     };
 }

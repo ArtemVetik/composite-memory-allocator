@@ -1,14 +1,7 @@
-#include "../include/CompositeMemoryAllocator.h"
+#include "CompositeMemoryAllocator.h"
+#include "Common.h"
 
-#include <windows.h>
-
-#ifdef DEBUG
-#include <iostream>
-#include <cassert>
-#define ASSERT(x) assert(x)
-#else
-#define ASSERT(x)
-#endif
+#include "BitOps.h"
 
 namespace CompositeMemoryAllocator {
 
@@ -31,12 +24,8 @@ namespace CompositeMemoryAllocator {
 
     void* CompositeMemoryAllocator::CompositeMemoryAllocator::alloc(uint32 size) {
         if (size > 0 && size <= 1 << FSABlockSize::FSA512) {
-//            int index = __builtin_clz((size - 1) >> 3) ^ 31;
-//            return m_fixedSizeAllocators[index].alloc(size);
-
-            for (auto &fsa : m_fixedSizeAllocators)
-                if (fsa.getBlockSize() >= size)
-                    return fsa.alloc(size);
+            uint32 index = BitOps::msb_index((size - 1) >> 3);
+            return m_fixedSizeAllocators[index].alloc(size);
         }
         else if (size <= CoalesceAllocator::PAGE_SIZE) {
             return m_coalesceAllocator.alloc(size);
@@ -78,23 +67,23 @@ namespace CompositeMemoryAllocator {
         ASSERT(false);
     }
 
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
     void CompositeMemoryAllocator::dumpStat() const {
         printf("----------------[DUMP STAT REPORT]----------------\n");
         for (auto &fsa : m_fixedSizeAllocators) {
             printf("----------(FSA %d stat report)----------\n", fsa.getBlockSize());
             FixedSizeAllocator::StatReport fsaStat = fsa.getStatReport();
-            printf("Pages: %u\tFree blocks: %u\t Alloc calls: %u\t Free calls: %u\n",
+            printf("Pages: %u\tFree blocks: %u\t Alloc calls: %llu\t Free calls: %llu\n",
                    fsaStat.pagesCount, fsaStat.freeBlockCount, fsaStat.allocCallCount, fsaStat.freeCallCount);
             printf("----------------------------------------------\n");
         }
 
         CoalesceAllocator::StatReport coalesceStat = m_coalesceAllocator.getStat();
         printf("---------(Coalesce stat report)---------\n");
-        printf("Pages: %u\tTotal alloc size: %u\tAlloc calls: %u\t Free calls: %u\n",
+        printf("Pages: %u\tTotal alloc size: %llu\tAlloc calls: %llu\t Free calls: %llu\n",
                coalesceStat.pagesCount, coalesceStat.totalAllocSize, coalesceStat.allocCallCount, coalesceStat.freeCallCount);
         printf("----------------------------------------------\n");
-
+        
         uint32 virtualAllocPages = 0;
         VirtualAllocPage* page = m_virtualAllocHead;
         while (page) page = page->next, virtualAllocPages++;

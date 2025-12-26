@@ -1,13 +1,12 @@
-# 'Google_test' is the subproject name
-project(Google_tests)
-
-# 'lib' is the folder with Google Test sources
 add_subdirectory(lib)
-include_directories(${gtest_SOURCE_DIR}/include {gtest_SOURCE_DIR}/scr ${gtest_SOURCE_DIR})
+include_directories(${gtest_SOURCE_DIR}/include)
 
-# 'Google_Tests_run' is the target name
-# 'test1.cpp test2.cpp' are source files with tests
-add_executable(Google_Tests_run FixedSizeAllocatorTests.cpp
-        CoalesceAllocatorTests.cpp
-        CompositeMemoryAllocatorTests.cpp)
-target_link_libraries(Google_Tests_run gtest gtest_main)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    add_executable(Google_Tests_run
+            FixedSizeAllocatorTests.cpp
+            CoalesceAllocatorTests.cpp
+            CompositeMemoryAllocatorTests.cpp
+    )
+
+    target_link_libraries(Google_Tests_run composite_memory_allocator gtest gtest_main)
+endif()

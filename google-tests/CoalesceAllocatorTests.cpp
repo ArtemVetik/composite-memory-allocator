@@ -1,5 +1,6 @@
-#include "lib/googletest/include/gtest/gtest.h."
-#include "../scr/CoalesceAllocator.cpp"
+#include "lib/googletest/include/gtest/gtest.h"
+
+#include <CoalesceAllocator.h>
 
 namespace CoalesceAllocator {
     void AllocateRange(CoalesceAllocator &allocator, std::vector<void*> &plist, int count, uint32 minSize, uint32 maxSize) {
@@ -128,6 +129,56 @@ namespace CoalesceAllocator {
 
         void* p = allocator.alloc(PAGE_SIZE - 61);
         allocator.free(p);
+
+        allocator.destroy();
+    }
+
+    TEST(CoalesceAllocator, FreeZeroSizeBlock)
+    {
+        CoalesceAllocator allocator = CoalesceAllocator();
+        allocator.init();
+
+        void* p = allocator.alloc(PAGE_SIZE - CoalesceAllocator::getBlockStartSize() - CoalesceAllocator::getBlockEndSize());
+        allocator.free(p);
+
+        allocator.destroy();
+    }
+
+    TEST(CoalesceAllocator, NewPageSplitFree)
+    {
+        CoalesceAllocator allocator = CoalesceAllocator();
+        allocator.init();
+
+        void* p0 = allocator.alloc(PAGE_SIZE);
+        void* p1 = allocator.alloc(PAGE_SIZE - CoalesceAllocator::getBlockStartSize() - CoalesceAllocator::getBlockEndSize());
+
+        allocator.free(p0);
+        allocator.free(p1);
+
+        allocator.destroy();
+    }
+
+    TEST(CoalesceAllocator, FindFreeBlockInMiddleOfFH)
+    {
+        // Tests that alloc correctly finds a free block located
+        // in the middle of the free list, not only at its beginning.
+
+        CoalesceAllocator allocator = CoalesceAllocator();
+        allocator.init();
+
+        void* p12_1 = allocator.alloc((1 << 12) | (1 << 11));
+        void* p1_0 = allocator.alloc(1000);
+        void* p12_2 = allocator.alloc(1 << 12);
+        void* p1_1 = allocator.alloc(1000);
+
+        allocator.free(p12_1);
+        allocator.free(p12_2);
+
+        void* p12_3 = allocator.alloc((1 << 12) | (1 << 5));
+        allocator.free(p12_3);
+
+        allocator.free(p1_0);
+        allocator.free(p1_1);
 
         allocator.destroy();
     }

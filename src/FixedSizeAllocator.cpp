@@ -1,23 +1,14 @@
-#include "../include/FixedSizeAllocator.h"
-
-#include <windows.h>
-#ifdef DEBUG
-#include <iostream>
-#include <cassert>
-#define ASSERT(x) assert(x)
-#else
-#define ASSERT(x)
-#endif
+#include "FixedSizeAllocator.h"
+#include "Common.h"
 
 namespace FixedSizeAllocator {
-    FixedSizeAllocator::FixedSizeAllocator() {
-        m_blockSize = -1;
-        m_headPage = nullptr;
-#ifdef DEBUG
-        m_allocCallCount = 0;
-        m_freeCallCount = 0;
+    FixedSizeAllocator::FixedSizeAllocator() :
+        m_blockSize(-1),
+        m_headPage(nullptr)
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
+        , m_StatReport{}
 #endif
-    }
+    { }
 
     FixedSizeAllocator::~FixedSizeAllocator() {
         if (m_headPage != nullptr)
@@ -40,13 +31,13 @@ namespace FixedSizeAllocator {
         while (m_headPage) {
             Page* next = m_headPage->next;
 
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
             AllocBlocksReport report = getAllocBlocksReport(pageNum++);
             ASSERT(report.count == 0);
 #endif
 
             if (!VirtualFree(m_headPage, 0, MEM_RELEASE)) {
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
                 printf("VirtualFree failed.\n");
 #endif
                 return;
@@ -62,8 +53,8 @@ namespace FixedSizeAllocator {
         if (size > m_blockSize)
             return nullptr;
 
-#ifdef DEBUG
-        m_allocCallCount++;
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
+        m_StatReport.allocCallCount++;
 #endif
 
         Page* page = m_headPage;
@@ -98,8 +89,8 @@ namespace FixedSizeAllocator {
 
     void FixedSizeAllocator::free(void *p) {
         ASSERT(m_headPage != nullptr);
-#ifdef DEBUG
-        m_freeCallCount++;
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
+        m_StatReport.freeCallCount++;
 #endif
 
         Page* page = m_headPage;
@@ -107,7 +98,7 @@ namespace FixedSizeAllocator {
             int blockNum = (int)((BYTE*)p - (BYTE*)page - sizeof(Page)) / (int)m_blockSize;
 
             if (blockNum >= 0 && blockNum <= PAGE_SIZE) {
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
                 int fh = page->fh;
                 while (fh >= 0) {
                     ASSERT(blockNum != fh);
@@ -146,7 +137,7 @@ namespace FixedSizeAllocator {
         Page* page = (Page*)VirtualAlloc(nullptr, sizeof(Page) + m_blockSize * PAGE_SIZE, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
 
         if (page == nullptr) {
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
             printf("VirtualAlloc failed.\n");
 #endif
             return nullptr;
@@ -159,7 +150,7 @@ namespace FixedSizeAllocator {
         return page;
     }
 
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
     StatReport FixedSizeAllocator::getStatReport() const {
         ASSERT(m_headPage != nullptr);
 
@@ -180,8 +171,8 @@ namespace FixedSizeAllocator {
         }
 
         return StatReport {
-            m_allocCallCount,
-            m_freeCallCount,
+            m_StatReport.allocCallCount,
+            m_StatReport.freeCallCount,
             freeCount,
             pageCount,
         };
@@ -197,6 +188,7 @@ namespace FixedSizeAllocator {
             return AllocBlocksReport {};
 
         bool blocks[PAGE_SIZE];
+        memset(blocks, 0, sizeof(bool) * PAGE_SIZE);
 
         int fh = page->fh;
         while (fh >= 0) {

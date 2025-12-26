@@ -6,11 +6,10 @@
 #include "CoalesceAllocator.h"
 
 namespace CompositeMemoryAllocator {
-    typedef unsigned int uint32;
 
     static constexpr uint32 BLOCK_TYPE_COUNT = 6;
 
-    enum FSABlockSize {
+    enum FSABlockSize : uint8 {
         FSA16 = 4,
         FSA32 = 5,
         FSA64 = 6,
@@ -23,11 +22,17 @@ namespace CompositeMemoryAllocator {
     public:
         CompositeMemoryAllocator() = default;
         ~CompositeMemoryAllocator() = default;
+
+        CompositeMemoryAllocator(const CompositeMemoryAllocator&) = delete;
+        CompositeMemoryAllocator& operator = (const CompositeMemoryAllocator&) = delete;
+        CompositeMemoryAllocator(CompositeMemoryAllocator&&) = delete;
+        CompositeMemoryAllocator& operator = (CompositeMemoryAllocator&&) = delete;
+
         void init();
         void destroy();
         void* alloc(uint32 size);
         void free(void *p);
-#ifdef DEBUG
+#if !defined(NDEBUG) && defined(ALLOCATORS_DEBUG)
         void dumpStat() const;
         void dumpBlocks() const;
 #endif
@@ -39,7 +44,7 @@ namespace CompositeMemoryAllocator {
 
         FixedSizeAllocator::FixedSizeAllocator m_fixedSizeAllocators[BLOCK_TYPE_COUNT];
         CoalesceAllocator::CoalesceAllocator m_coalesceAllocator;
-        VirtualAllocPage* m_virtualAllocHead{};
+        VirtualAllocPage* m_virtualAllocHead = nullptr;
     };
 }
 

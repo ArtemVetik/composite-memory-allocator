@@ -1,19 +1,24 @@
 cmake_minimum_required(VERSION 3.26)
-project(composite_memory_allocator)
+project(composite_memory_allocator LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
-
-add_executable(composite_memory_allocator scr/main.cpp
-        include/FixedSizeAllocator.h
-        scr/FixedSizeAllocator.cpp
-        include/CoalesceAllocator.h
-        scr/CoalesceAllocator.cpp
-        include/CompositeMemoryAllocator.h
-        scr/CompositeMemoryAllocator.cpp
+add_library(composite_memory_allocator STATIC
+    src/CoalesceAllocator.cpp
+    src/CompositeMemoryAllocator.cpp
+    src/FixedSizeAllocator.cpp
 )
 
-if (CMAKE_BUILD_TYPE MATCHES Debug)
-    add_definitions(-DDEBUG)
-endif()
+target_include_directories(composite_memory_allocator
+    PUBLIC ${CMAKE_CURRENT_LIST_DIR}/include
+)
+
+target_compile_features(composite_memory_allocator PUBLIC cxx_std_17)
+target_compile_definitions(composite_memory_allocator PUBLIC ALLOCATORS_DEBUG)
 
 add_subdirectory(google-tests)
+add_subdirectory(benchmarks)
+add_subdirectory(example)
+
+add_test(
+    NAME composite_memory_allocator
+    COMMAND Google_Tests_run
+)
